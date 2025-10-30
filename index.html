@@ -252,56 +252,58 @@ src="https://www.facebook.com/tr?id=1092475452410830&ev=PageView&noscript=1"
     </script>
 
     <script>
-      // ROTACIÓN ALEATORIA SIN REPETICIONES de WhatsApp
-      (function () {
-        const numerosWhatsapp = [
-          "5493564371025",
-          "5493513834328",
-        ];
-        const mensaje =
-          "Hola, quisiera un usuario y quiero cargar para tener mi bono de BIENVENIDA SOLO POR HOY";
+  // ROTACIÓN ALEATORIA SIN REPETICIONES de WhatsApp
+  (function () {
+    const numerosWhatsapp = [
+      "5493564371025",
+      "5493513834328",
+    ];
+    const mensaje =
+      "Hola, quisiera un usuario y quiero cargar para tener mi bono de BIENVENIDA SOLO POR HOY";
 
-        // Fisher–Yates shuffle
-        function shuffleArray(arr) {
-          for (let i = arr.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [arr[i], arr[j]] = [arr[j], arr[i]];
-          }
-        }
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
 
-        // Inicializa o reinicia la secuencia
-        function initSequence() {
-          sequence = [...numerosWhatsapp];
-          shuffleArray(sequence);
+    function initSequence() {
+      sequence = [...numerosWhatsapp];
+      shuffleArray(sequence);
+      const lastUsed = localStorage.getItem("wa_last");
+      if (lastUsed && sequence[0] === lastUsed) {
+        do { shuffleArray(sequence); }
+        while (sequence[0] === lastUsed);
+      }
+      localStorage.setItem("wa_sequence", JSON.stringify(sequence));
+      index = 0;
+      localStorage.setItem("wa_seq_index", index);
+    }
 
-          // Evitar que el primero sea igual al último usado
-          const lastUsed = localStorage.getItem("wa_last");
-          if (lastUsed && sequence[0] === lastUsed) {
-            do { shuffleArray(sequence); }
-            while (sequence[0] === lastUsed);
-          }
+    let sequence = JSON.parse(localStorage.getItem("wa_sequence") || "[]");
+    let index = parseInt(localStorage.getItem("wa_seq_index"), 10) || 0;
+    if (!sequence.length) initSequence();
 
-          localStorage.setItem("wa_sequence", JSON.stringify(sequence));
-          index = 0;
-          localStorage.setItem("wa_seq_index", index);
-        }
+    document
+      .getElementById("whatsapp-btn")
+      .addEventListener("click", function () {
+        if (index >= sequence.length) initSequence();
+        const numero = sequence[index];
+        this.href = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+        localStorage.setItem("wa_last", numero);
+        index++;
+        localStorage.setItem("wa_seq_index", index);
 
-        // Cargar secuencia e índice
-        let sequence = JSON.parse(localStorage.getItem("wa_sequence") || "[]");
-        let index = parseInt(localStorage.getItem("wa_seq_index"), 10) || 0;
-        if (!sequence.length) initSequence();
-
-        document
-          .getElementById("whatsapp-btn")
-          .addEventListener("click", function () {
-            if (index >= sequence.length) initSequence();
-            const numero = sequence[index];
-            this.href = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
-            localStorage.setItem("wa_last", numero);
-            index++;
-            localStorage.setItem("wa_seq_index", index);
+        // 👉🏻 Aquí se dispara el evento CONTACT correctamente
+        if (typeof fbq === 'function') {
+          fbq('track', 'Contact', {
+            value: 1.00,
+            currency: 'USD',
+            content_name: 'WhatsApp CTA',
+            content_category: 'Lead'
           });
-      })();
-    </script>
-  </body>
-</html>
+        }
+      });
+  })();
+</script>
